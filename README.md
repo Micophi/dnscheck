@@ -2,6 +2,8 @@
 
 This project was inspired by [this post](https://forums.lawrencesystems.com/t/which-is-the-best-dns-for-secure-browsing-cloudflare-quad9-nextdns-and-adguard-dns-youtube-release/18910) from Lawrence of Lawrence Systems.
 
+![](examples/demo.gif)
+
 ## Configuration file
 Dnscheck will lock for a `dnscheck.yaml` configuration file in the same directory has it is being run. This file must contain the DNS servers you want to test. There is a sample config file available under `/configs` with preconfigured DNS servers. 
 
