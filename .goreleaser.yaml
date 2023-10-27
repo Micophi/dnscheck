@@ -1,11 +1,3 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines bellow are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -63,7 +55,7 @@ nfpms:
     homepage: https://github.com/Micophi/dnscheck
 
     # Your app's maintainer (probably you).
-    maintainer: Micophi <[email protected]>
+    maintainer: Micophi <micophi@protonmail.com>
 
     # Your app's description.
     description: |-
@@ -97,36 +89,18 @@ nfpms:
     # Priority.
     priority: extra
 
+    contents:
+      - src: configs/dnscheck.yaml
+        dst: /etc/{{ .ProjectName }}/dnscheck.yaml
+      - src: scripts/*.sh
+        dst: /usr/bin
+
     # Custom configuration applied only to the Deb packager.
     deb:
       # Lintian overrides
       lintian_overrides:
         - statically-linked-binary
         - changelog-file-missing-in-native-package
-
-      # # Custom deb special files.
-      # scripts:
-      #   # Deb rules script.
-      #   rules: foo.sh
-      #   # Deb templates file, when using debconf.
-      #   templates: templates
-
-      # # Custom deb triggers
-      # triggers:
-      #   # register interest on a trigger activated by another package
-      #   # (also available: interest_await, interest_noawait)
-      #   interest:
-      #     - some-trigger-name
-      #   # activate a trigger for another package
-      #   # (also available: activate_await, activate_noawait)
-      #   activate:
-      #     - another-trigger-name
-
-      # Packages which would break if this package would be installed.
-      # The installation of this package is blocked if `some-package`
-      # is already installed.
-      # breaks:
-      #   - some-package
 
       # The package is signed if a key_file is set
       signature:
@@ -146,47 +120,3 @@ nfpms:
         #
         # Default: 'origin'
         type: origin
-
-    # apk:
-    #   # APK specific scripts.
-    #   scripts:
-    #     # The preupgrade script runs before APK upgrade.
-    #     preupgrade: ./scripts/preupgrade.sh
-    #     # The postupgrade script runs after APK.
-    #     postupgrade: ./scripts/postupgrade.sh
-
-    #   # The package is signed if a key_file is set
-    #   signature:
-    #     # PGP secret key file path (can also be ASCII-armored).
-    #     # The passphrase is taken from the environment variable
-    #     # `$NFPM_ID_APK_PASSPHRASE` with a fallback to `$NFPM_ID_PASSPHRASE`,
-    #     # where ID is the id of the current nfpm config.
-    #     # The id will be transformed to uppercase.
-    #     # E.g. If your nfpm id is 'default' then the apk-specific passphrase
-    #     # should be set as `$NFPM_DEFAULT_APK_PASSPHRASE`
-    #     #
-    #     # Templates: allowed.
-    #     # key_file: "{{ .Env.GPG_KEY_PATH }}"
-
-    #     # The name of the signing key. When verifying a package, the signature
-    #     # is matched to the public key store in /etc/apk/keys/<key_name>.rsa.pub.
-    #     #
-    #     # Default: maintainer's email address
-    #     # Templates: allowed. (since v1.15)
-    #     key_name: origin
-
-    # archlinux:
-    #   # Archlinux-specific scripts
-    #   scripts:
-    #     # The preupgrade script runs before pacman upgrades the package.
-    #     preupgrade: ./scripts/preupgrade.sh
-    #     # The postupgrade script runs after pacman upgrades the package.
-    #     postupgrade: ./scripts/postupgrade.sh
-
-    #   # The pkgbase can be used to explicitly specify the name to be used to refer
-    #   # to a group of packages. See: https://wiki.archlinux.org/title/PKGBUILD#pkgbase.
-    #   pkgbase: foo
-
-    #   # The packager refers to the organization packaging the software, not to be confused
-    #   # with the maintainer, which is the person who maintains the software.
-    #   packager: GoReleaser <[email protected]>
