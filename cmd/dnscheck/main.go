@@ -21,6 +21,11 @@ import (
 var GLOBAL_RATE_LIMIT = 25
 var GLOBAL_MAX_RETRIES = 20
 
+var SINKHOLE_IP = "0.0.0.0"
+var ADGUARD_REDIRECT_IP = "94.140.14.33"
+var CIRA_REDIRECT_IP = []string{"75.2.78.236", "99.83.179.4", "99.83.178.7", "75.2.110.227"}
+var BLOCK_IP_ANSWERS = append(CIRA_REDIRECT_IP, SINKHOLE_IP, ADGUARD_REDIRECT_IP)
+
 func Lookup(domain string, dnsServer string) (bool, time.Duration, int, bool) {
 	msg := new(dns.Msg)
 	msg.SetQuestion(fmt.Sprintf("%s.", domain), dns.TypeA)
@@ -32,7 +37,6 @@ func Lookup(domain string, dnsServer string) (bool, time.Duration, int, bool) {
 		in, rtt, err := client.Exchange(msg, fmt.Sprintf("%s:53", dnsServer))
 
 		if err != nil {
-			// os.Stderr.WriteString(fmt.Sprintf("|%s| Error while resolving: %s. Retrying....\n", dnsServer, domain))
 			retries++
 		} else if in.Answer == nil || len(in.Answer) == 0 {
 			return true, rtt, retries, false
@@ -44,8 +48,10 @@ func Lookup(domain string, dnsServer string) (bool, time.Duration, int, bool) {
 					break
 				}
 			}
-			if ip == "0.0.0.0" {
-				return true, rtt, retries, false
+			for _, blocked := range BLOCK_IP_ANSWERS {
+				if ip == blocked {
+					return true, rtt, retries, false
+				}
 			}
 
 			return false, rtt, retries, false
@@ -107,6 +113,9 @@ func getDomainsFromFile(filename string) []string {
 	utilities.CheckError(err)
 
 	lines := strings.Split(string(content), "\n")
+	for index := range lines {
+		lines[index] = strings.TrimRight(lines[index], "\r")
+	}
 	return lines
 }
 
