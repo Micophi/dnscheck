@@ -13,8 +13,19 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      # - windows
+      - windows
       # - darwin
+
+archives:
+  - format: tar.gz
+    files:
+    - LICENSE
+    - README.md
+    - src: configs/dnscheck.yaml
+      dst: dnscheck.yaml
+    format_overrides:
+    - goos: windows
+      format: zip
 
 changelog:
   sort: asc
@@ -78,7 +89,7 @@ nfpms:
       - moreutils
 
     bindir: /usr/bin
-    version_metadata: git
+    # version_metadata: git
 
     # Version Release.
     # release: 1
