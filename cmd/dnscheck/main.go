@@ -65,13 +65,16 @@ func createProgressBars(dnsServers []structs.DnsServer, length int, progressWait
 	return progressBars
 }
 
-func createRateLimiters(dnsServers []structs.DnsServer) map[int]*rate.Limiter {
+func createRateLimiters(dnsServers []structs.DnsServer, globalRateLimit int) map[int]*rate.Limiter {
 	var rateLimiters = make(map[int]*rate.Limiter)
+	var globalLimiter = rate.NewLimiter(rate.Limit(globalRateLimit), 1)
+
 	for index, dnsServer := range dnsServers {
-		if dnsServer.RateLimit < 1 {
-			dnsServer.RateLimit = 10
+		if dnsServer.RateLimit > 0 {
+			rateLimiters[index] = rate.NewLimiter(rate.Limit(dnsServer.RateLimit), 1)
+		} else if dnsServer.RateLimit == 0 {
+			rateLimiters[index] = globalLimiter
 		}
-		rateLimiters[index] = rate.NewLimiter(rate.Limit(dnsServer.RateLimit), 1)
 	}
 	return rateLimiters
 }
@@ -106,7 +109,7 @@ func main() {
 	progressWaitGroup := mpb.New(mpb.WithWaitGroup(&wg))
 
 	var progressBars = createProgressBars(dnsServers.DnsServers[:], len(domains), progressWaitGroup)
-	var rateLimiters = createRateLimiters(dnsServers.DnsServers[:])
+	var rateLimiters = createRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
 
 	for _, domain := range domains {
 		for index := range dnsServers.DnsServers {

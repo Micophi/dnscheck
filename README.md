@@ -13,11 +13,15 @@ Dnscheck will look for a `dnscheck.yaml` configuration file in the same director
 Currently, dnscheck only supports DNS over UDP on port 53.
 
 ```yaml
+rateLimit: 50 # Global rate limit (Shared between all servers tested)
 dnsservers:
   - name: Quad9   # Descriptive name of the DNS server
     description: Malware Blocking, DNSSEC Validation
     ip: 9.9.9.9   # The IP of the DNS server
-    rateLimit: 15 # Limit the number of queries per second to send to the DNS server
+    rateLimit: 15 # (Overrides the global rate limit for this server)Limit the number of queries per second to send to the DNS server
+  - name: Cloudflare
+    description: Cloudflare DNS(https://1.1.1.1/)
+    ip: 1.1.1.1
 ```
 
 ## Behavior
