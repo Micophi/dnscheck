@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
+	"dnscheck/internal/dnscheck"
 	"dnscheck/internal/structs"
 	"dnscheck/internal/utilities"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/alexflint/go-arg"
-	"github.com/miekg/dns"
 	"github.com/spf13/viper"
 	"github.com/vbauerster/mpb/v8"
 	"github.com/vbauerster/mpb/v8/decor"
@@ -19,107 +18,69 @@ import (
 )
 
 var GLOBAL_RATE_LIMIT = 25
-var GLOBAL_MAX_RETRIES = 20
 
-var SINKHOLE_IP = "0.0.0.0"
-var ADGUARD_REDIRECT_IP = "94.140.14.33"
-var CIRA_REDIRECT_IP = []string{"75.2.78.236", "99.83.179.4", "99.83.178.7", "75.2.110.227"}
-var BLOCK_IP_ANSWERS = append(CIRA_REDIRECT_IP, SINKHOLE_IP, ADGUARD_REDIRECT_IP)
+func domainNameCheck(domain string, dnsServer *structs.DnsServer, wg *sync.WaitGroup, progressBar *mpb.Bar, rateLimiter *rate.Limiter) {
+	rateLimiter.Wait(context.Background())
 
-func Lookup(domain string, dnsServer string) (bool, time.Duration, int, bool) {
-	msg := new(dns.Msg)
-	msg.SetQuestion(fmt.Sprintf("%s.", domain), dns.TypeA)
+	sinkholed, rtt, retries, timedout := dnscheck.IsDomainBlocked(domain, dnsServer.Ip)
+	dnsServer.Retries += retries
 
-	client := dns.Client{}
-	retries := 0
-	var err error
-	for err == nil {
-		in, rtt, err := client.Exchange(msg, fmt.Sprintf("%s:53", dnsServer))
-
-		if err != nil {
-			retries++
-		} else if in.Answer == nil || len(in.Answer) == 0 {
-			return true, rtt, retries, false
-		} else {
-			var ip string
-			for _, element := range in.Answer {
-				if _, ok := element.(*dns.A); ok {
-					ip = element.(*dns.A).A.String()
-					break
-				}
-			}
-			for _, blocked := range BLOCK_IP_ANSWERS {
-				if ip == blocked {
-					return true, rtt, retries, false
-				}
-			}
-
-			return false, rtt, retries, false
-		}
-		if retries == GLOBAL_MAX_RETRIES {
-			return false, 0, retries, true
+	if timedout {
+		dnsServer.Skip++
+	} else {
+		dnsServer.AvgRtt += rtt
+		dnsServer.Count += 1
+		if sinkholed {
+			dnsServer.Blocked++
 		}
 	}
-	return false, 0, retries, false
+
+	wg.Done()
+	progressBar.Increment()
 }
 
-func computeAvgRtt(latencies []time.Duration, dnsServer structs.DnsServer) time.Duration {
-	// calculate average latency
-	total := time.Duration(0)
-	for _, latency := range latencies {
-		total += latency
+func updateAverageRtt(dnsServers []structs.DnsServer) {
+	for index, dnsServer := range dnsServers {
+		dnsServers[index].AvgRtt = dnsServer.AvgRtt / time.Duration(dnsServer.Count)
 	}
-	total = total / (time.Duration(dnsServer.Count - dnsServer.Skip))
-	return total
 }
 
-func testDNS(domains []string, dnsServer *structs.DnsServer, wg *sync.WaitGroup, progressBar *mpb.Bar) {
-	if dnsServer.RateLimit == 0 {
-		dnsServer.RateLimit = GLOBAL_RATE_LIMIT
-	}
-	limiter := rate.NewLimiter(rate.Limit(dnsServer.RateLimit), 0)
-	defer wg.Done()
-	latencies := []time.Duration{}
-	for _, domain := range domains {
-		limiter.Wait(context.Background())
-		sinkholed, rtt, retries, timedout := Lookup(domain, dnsServer.Ip)
-		dnsServer.Retries += retries
+func createProgressBars(dnsServers []structs.DnsServer, length int, progressWaitGroup *mpb.Progress) map[int]*mpb.Bar {
+	var progressBars = make(map[int]*mpb.Bar)
 
-		if timedout {
-			dnsServer.Skip++
-		} else {
-			latencies = append(latencies, rtt)
-			dnsServer.Count++
-			if sinkholed {
-				dnsServer.Blocked++
-			}
+	for index, dnsServer := range dnsServers {
+		name := fmt.Sprintf("%s:", dnsServer.Name)
+		progressBars[index] = progressWaitGroup.AddBar(int64(length),
+			mpb.PrependDecorators(
+				decor.Name(name),
+				decor.CountersNoUnit(" %d/%d", decor.WCSyncWidth),
+			),
+			mpb.AppendDecorators(
+				decor.OnComplete(
+					decor.Percentage(decor.WCSyncSpace), "done",
+				),
+			),
+		)
+	}
+	return progressBars
+}
+
+func createRateLimiters(dnsServers []structs.DnsServer, globalRateLimit int) map[int]*rate.Limiter {
+	var rateLimiters = make(map[int]*rate.Limiter)
+	var globalLimiter = rate.NewLimiter(rate.Limit(globalRateLimit), 1)
+
+	for index, dnsServer := range dnsServers {
+		if dnsServer.RateLimit > 0 {
+			rateLimiters[index] = rate.NewLimiter(rate.Limit(dnsServer.RateLimit), 1)
+		} else if dnsServer.RateLimit == 0 {
+			rateLimiters[index] = globalLimiter
 		}
-		progressBar.Increment()
 	}
-	dnsServer.AvgRtt = computeAvgRtt(latencies, *dnsServer)
-}
-
-func readConfigurations() {
-	viper.SetConfigName("dnscheck")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("/etc/dnscheck/")
-	err := viper.ReadInConfig() // Find and read the config file
-	utilities.CheckError(err)
-}
-
-func getDomainsFromFile(filename string) []string {
-	content, err := os.ReadFile(filename)
-	utilities.CheckError(err)
-
-	lines := strings.Split(string(content), "\n")
-	for index := range lines {
-		lines[index] = strings.TrimRight(lines[index], "\r")
-	}
-	return lines
+	return rateLimiters
 }
 
 func main() {
+
 	var args struct{ structs.CliArgs }
 	p := arg.MustParse(&args)
 
@@ -134,10 +95,10 @@ func main() {
 		viper.ReadConfig(file)
 
 	} else {
-		readConfigurations()
+		utilities.ReadConfigurations()
 	}
 
-	domains := getDomainsFromFile(args.Domains)
+	domains := utilities.GetDomainsFromFile(args.Domains)
 	start := time.Now()
 
 	dnsServers := structs.DnsServers{}
@@ -147,26 +108,18 @@ func main() {
 	var wg sync.WaitGroup
 	progressWaitGroup := mpb.New(mpb.WithWaitGroup(&wg))
 
-	total := len(domains)
-	for index, dnsServer := range dnsServers.DnsServers {
+	var progressBars = createProgressBars(dnsServers.DnsServers[:], len(domains), progressWaitGroup)
+	var rateLimiters = createRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
 
-		name := fmt.Sprintf("%s:", dnsServer.Name)
-		bar := progressWaitGroup.AddBar(int64(total),
-			mpb.PrependDecorators(
-				decor.Name(name),
-				decor.CountersNoUnit(" %d/%d", decor.WCSyncWidth),
-			),
-			mpb.AppendDecorators(
-				decor.OnComplete(
-					decor.Percentage(decor.WCSyncSpace), "done",
-				),
-			),
-		)
-		wg.Add(1)
-		go testDNS(domains, &dnsServers.DnsServers[index], &wg, bar)
-
+	for _, domain := range domains {
+		for index := range dnsServers.DnsServers {
+			wg.Add(1)
+			go domainNameCheck(domain, &dnsServers.DnsServers[index], &wg, progressBars[index], rateLimiters[index])
+		}
 	}
+
 	progressWaitGroup.Wait()
+	updateAverageRtt(dnsServers.DnsServers[:])
 
 	// End of run summary
 	fmt.Println("")
@@ -179,5 +132,4 @@ func main() {
 	}
 
 	dnsServers.PrintSummary()
-
 }

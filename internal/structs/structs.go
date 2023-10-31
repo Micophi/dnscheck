@@ -23,6 +23,7 @@ type DnsServer struct {
 
 type DnsServers struct {
 	DnsServers []DnsServer `yaml:"dnsservers"`
+	RateLimit  int         `yaml:"rateLimit"`
 }
 
 func (dnsServers DnsServers) Save(outputpath string) {
