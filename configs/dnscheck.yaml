@@ -3,36 +3,48 @@ dnsservers:
   - name: Quad9
     description: Malware Blocking, DNSSEC Validation
     ip: 9.9.9.9
-    rateLimit: 15
+    rateLimit: 10
   - name: Quad9 Secured
     description: "Secured w/ECS: Malware blocking, DNSSEC Validation, ECS enabled"
     ip: 9.9.9.11
-    rateLimit: 15
+    rateLimit: 10
   - name: Quad9 Unsecured
     description: "Unsecured: No Malware blocking, no DNSSEC validation (for experts only!)"
     ip: 9.9.9.10
-    rateLimit: 15
+    rateLimit: 10
   - name: Cloudflare
     description: Cloudflare DNS(https://1.1.1.1/)
     ip: 1.1.1.1
-    rateLimit: 15
+    rateLimit: 10
   - name: Google
     description: Google DNS (https://developers.google.com/speed/public-dns)
     ip: 8.8.8.8
-    rateLimit: 15
+    rateLimit: 10
   - name: OpenDNS
     description: OpenDNS Family Shield
     ip: 208.67.222.123
-    rateLimit: 15
+    rateLimit: 10
   - name: CIRA Private
     description: DNS resolution only
     ip: 149.112.121.10
-    rateLimit: 15
+    rateLimit: 10
   - name: CIRA Protected
     description: Malware and phishing protection
     ip: 149.112.121.20
-    rateLimit: 15
+    rateLimit: 10
   - name: CIRA Family
     description: Protected + blocking pornographic content
     ip: 149.112.121.30
-    rateLimit: 15 
+    rateLimit: 10
+  - name: Adguard
+    description: Block ads and trackers
+    ip: 94.140.14.14
+    rateLimit: 10
+  - name: Adguard Non-Filtering
+    description: Does not block ads, trackers, or any other DNS requests
+    ip: 94.140.14.140
+    rateLimit: 10
+  - name: Adguard Family protection
+    description: Block ads, trackers, adult content, and enable Safe Search and Safe Mode, where possible
+    ip: 94.140.14.15
+    rateLimit: 10
