@@ -2,13 +2,13 @@
 
 This project was inspired by [this post](https://forums.lawrencesystems.com/t/which-is-the-best-dns-for-secure-browsing-cloudflare-quad9-nextdns-and-adguard-dns-youtube-release/18910) from Lawrence of Lawrence Systems.
 
-Dnscheck is a tool to check if a DNS server will properly resolve or block a provided domain name. Some DNS sevrers will allow most name resolution except widely known malicious domains whereas other will block various categories (e.g. Ads, trackers, adult content, compromised domains, etc).
+Dnscheck is a tool to check if a DNS server will properly resolve or block a provided domain name. Some DNS servers will allow most name resolution except widely known malicious domains, whereas others will block various categories (e.g. Ads, trackers, adult content, compromised domains, etc).
 
 ![](examples/demo.gif)
 
 
 ## Configuration file
-Dnscheck will lock for a `dnscheck.yaml` configuration file in the same directory has it is being run. This file must contain the DNS servers you want to test. There is a sample config file available under `/configs` with preconfigured DNS servers. 
+Dnscheck will look for a `dnscheck.yaml` configuration file in the same directory has it is being run. This file must contain the DNS servers you want to test. There is a sample config file available under `/configs` with preconfigured DNS servers. 
 
 Currently, dnscheck only supports DNS over UDP on port 53.
 
