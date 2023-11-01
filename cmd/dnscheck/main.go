@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"dnscheck/internal/dnscheck"
 	"dnscheck/internal/structs"
 	"dnscheck/internal/utilities"
@@ -14,35 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/vbauerster/mpb/v8"
 	"github.com/vbauerster/mpb/v8/decor"
-	"golang.org/x/time/rate"
 )
-
-var GLOBAL_RATE_LIMIT = 25
-
-func domainNameCheck(domain string, dnsServer *structs.DnsServer, wg *sync.WaitGroup, progressBar *mpb.Bar, rateLimiter *rate.Limiter) {
-	rateLimiter.Wait(context.Background())
-
-	sinkholed, rtt, retries, timedout := dnscheck.IsDomainBlocked(domain, dnsServer.Ip)
-	dnsServer.Retries += retries
-
-	if timedout {
-		dnsServer.Skip++
-	} else {
-		dnsServer.AvgRtt += rtt
-		dnsServer.Count += 1
-		if sinkholed {
-			dnsServer.Blocked++
-		}
-	}
-	progressBar.Increment()
-	wg.Done()
-}
-
-func updateAverageRtt(dnsServers []structs.DnsServer) {
-	for index, dnsServer := range dnsServers {
-		dnsServers[index].AvgRtt = dnsServer.AvgRtt / time.Duration(dnsServer.Count)
-	}
-}
 
 func createProgressBars(dnsServers []structs.DnsServer, length int, progressWaitGroup *mpb.Progress) map[int]*mpb.Bar {
 	var progressBars = make(map[int]*mpb.Bar)
@@ -64,18 +35,24 @@ func createProgressBars(dnsServers []structs.DnsServer, length int, progressWait
 	return progressBars
 }
 
-func createRateLimiters(dnsServers []structs.DnsServer, globalRateLimit int) map[int]*rate.Limiter {
-	var rateLimiters = make(map[int]*rate.Limiter)
-	var globalLimiter = rate.NewLimiter(rate.Limit(globalRateLimit), 1)
+var version = "devel"
 
-	for index, dnsServer := range dnsServers {
-		if dnsServer.RateLimit > 0 {
-			rateLimiters[index] = rate.NewLimiter(rate.Limit(dnsServer.RateLimit), 1)
-		} else if dnsServer.RateLimit == 0 {
-			rateLimiters[index] = globalLimiter
-		}
-	}
-	return rateLimiters
+type CliArgs struct {
+	Domains    string `arg:"--domains" help:"Path to file with list of domains to check"`
+	DnsConfigs string `arg:"--config" help:"Override the config file used with the one provided"`
+	Output     string `arg:"--output" help:"Override default output path"`
+}
+
+func (CliArgs) Version() string {
+	return fmt.Sprintf("DNSCheck version %s\n", version)
+}
+
+func (CliArgs) Description() string {
+	return "\nDNSCheck is a tool to test a list of domains against multiple DNS server simultaneously and return the number that was blocked.\n"
+}
+
+func (CliArgs) Epilogue() string {
+	return "For more information visit: https://github.com/Micophi/dnscheck\n"
 }
 
 func main() {
@@ -108,17 +85,19 @@ func main() {
 	progressWaitGroup := mpb.New(mpb.WithWaitGroup(&wg))
 
 	var progressBars = createProgressBars(dnsServers.DnsServers[:], len(domains), progressWaitGroup)
-	var rateLimiters = createRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
+	var rateLimiters = dnscheck.CreateRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
+	var count = 0
 
 	for _, domain := range domains {
 		for index := range dnsServers.DnsServers {
 			wg.Add(1)
-			go domainNameCheck(domain, &dnsServers.DnsServers[index], &wg, progressBars[index], rateLimiters[index])
+			go dnscheck.DomainNameCheck(domain, &dnsServers.DnsServers[index], &wg, progressBars[index], rateLimiters[index])
 		}
 	}
 
 	progressWaitGroup.Wait()
-	updateAverageRtt(dnsServers.DnsServers[:])
+	fmt.Println(count)
+	dnscheck.UpdateAverageRtt(dnsServers.DnsServers[:])
 
 	// End of run summary
 	fmt.Println("")
