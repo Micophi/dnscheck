@@ -34,9 +34,8 @@ func domainNameCheck(domain string, dnsServer *structs.DnsServer, wg *sync.WaitG
 			dnsServer.Blocked++
 		}
 	}
-
-	wg.Done()
 	progressBar.Increment()
+	wg.Done()
 }
 
 func updateAverageRtt(dnsServers []structs.DnsServer) {
@@ -81,7 +80,7 @@ func createRateLimiters(dnsServers []structs.DnsServer, globalRateLimit int) map
 
 func main() {
 
-	var args struct{ structs.CliArgs }
+	var args CliArgs
 	p := arg.MustParse(&args)
 
 	if args.Domains == "" {

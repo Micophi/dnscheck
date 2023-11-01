@@ -3,7 +3,7 @@ module dnscheck
 go 1.21.3
 
 require (
-	github.com/alexflint/go-arg v1.4.3
+	github.com/alexflint/go-arg v1.4.4-0.20231010223646-bf629a16cbe5
 	github.com/miekg/dns v1.1.56
 	github.com/spf13/viper v1.17.0
 	github.com/vbauerster/mpb/v8 v8.6.2
@@ -14,7 +14,7 @@ require (
 require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
-	github.com/alexflint/go-scalar v1.1.0 // indirect
+	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
