@@ -6,6 +6,14 @@ Dnscheck is a tool to check if a DNS server will properly resolve or block a pro
 
 ![](examples/demo.gif)
 
+## Installation
+
+The release page contains the binary and provided configuration file. 
+
+### Debian-based OS (Debian, Ubuntu, etc.)
+For debian-based operating systems, a .deb package will install the binary and deploy the configuration file under `/etc/dnscheck`
+
+Also the scripts will be deployed on the system under `/usr/bin`.
 
 ## Configuration file
 Dnscheck will look for a `dnscheck.yaml` configuration file in the same directory has it is being run. This file must contain the DNS servers you want to test. There is a sample config file available under `/configs` with preconfigured DNS servers. 
@@ -25,7 +33,7 @@ dnsservers:
 ```
 
 ## Behavior
-Currently the application retries to resolve a domain up to 20 times before skipping it. In my limited testing, the queries sometime fails probably due to my test configurations.
+Currently the application retries to resolve a domain up to 20 times before skipping it. In my limited testing, the queries sometime fails probably due to a personnal configurations.
 
 ## Results
 By default, `dnscheck` will output the results in the current folder using the current date and time as filename(i.e. YYYY-MM-DD_HHhMMmSS.yaml). The output has the same format as the config file with only more fields added to it for details.
@@ -45,7 +53,7 @@ dnsservers:
 ```
 
 ## Scripts
-The script folder has some simple script to download domain list to test. They require `wget` and `sponge` to run properly.
+The script folder has some simple scripts to download domain list to test. They require `wget` and `sponge` to run properly.
 
 ```bash
 sudo apt-get install -y wget moreutils

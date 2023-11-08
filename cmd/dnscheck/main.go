@@ -38,10 +38,10 @@ func createProgressBars(dnsServers []structs.DnsServer, length int, progressWait
 var version = "devel"
 
 type CliArgs struct {
-	Domains    string   `arg:"positional" help:"Path to file with list of domains to check"`
-	ExtraDNS   []string `arg:"--dns,separate"`
-	DnsConfigs string   `arg:"--config" help:"Override the config file used with the one provided"`
-	Output     string   `arg:"--output" help:"Override default output path"`
+	Domains    string   `arg:"positional" help:"path to file with list of domains to check"`
+	ExtraDNS   []string `arg:"--dns,separate" help:"override config file and test de provided DNS servers. Can be used multiple times."`
+	DnsConfigs string   `arg:"--config" help:"override the config file used with the one provided"`
+	Output     string   `arg:"--output" help:"override default output path"`
 }
 
 func (CliArgs) Version() string {
