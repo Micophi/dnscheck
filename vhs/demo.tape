@@ -59,10 +59,10 @@ Require echo
 Set Theme "Monokai Pro"
 Set Shell "bash"
 Set FontSize 18
-Set Width 1250
+Set Width 1400
 Set Height 700
 Set PlaybackSpeed 2.0
 
-Type "dnscheck --domains scripts/domains.txt --config configs/dnscheck.yaml" Sleep 500ms  Enter
+Type "dnscheck --config configs/dnscheck.yaml scripts/domains.txt" Sleep 500ms  Enter
 
-Sleep 20s
+Sleep 25s
