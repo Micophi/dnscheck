@@ -95,7 +95,6 @@ func main() {
 
 	var progressBars = createProgressBars(dnsServers.DnsServers[:], len(domains), progressWaitGroup)
 	var rateLimiters = dnscheck.CreateRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
-	var count = 0
 
 	for _, domain := range domains {
 		for index := range dnsServers.DnsServers {
@@ -105,7 +104,6 @@ func main() {
 	}
 
 	progressWaitGroup.Wait()
-	fmt.Println(count)
 	dnscheck.UpdateAverageRtt(dnsServers.DnsServers[:])
 
 	// End of run summary
