@@ -38,9 +38,10 @@ func createProgressBars(dnsServers []structs.DnsServer, length int, progressWait
 var version = "devel"
 
 type CliArgs struct {
-	Domains    string `arg:"positional" help:"Path to file with list of domains to check"`
-	DnsConfigs string `arg:"--config" help:"Override the config file used with the one provided"`
-	Output     string `arg:"--output" help:"Override default output path"`
+	Domains    string   `arg:"positional" help:"path to file with list of domains to check"`
+	ExtraDNS   []string `arg:"--dns,separate" help:"override config file and test de provided DNS servers. Can be used multiple times."`
+	DnsConfigs string   `arg:"--config" help:"override the config file used with the one provided"`
+	Output     string   `arg:"--output" help:"override default output path"`
 }
 
 func (CliArgs) Version() string {
@@ -78,8 +79,16 @@ func main() {
 	start := time.Now()
 
 	dnsServers := structs.DnsServers{}
-	err := viper.Unmarshal(&dnsServers)
-	utilities.CheckError(err)
+
+	if len(args.ExtraDNS) > 0 {
+		for _, dns := range args.ExtraDNS {
+			cliDNS := structs.DnsServer{Name: dns, Ip: dns, RateLimit: 25}
+			dnsServers.DnsServers = append(dnsServers.DnsServers, cliDNS)
+		}
+	} else {
+		err := viper.Unmarshal(&dnsServers)
+		utilities.CheckError(err)
+	}
 
 	var wg sync.WaitGroup
 	progressWaitGroup := mpb.New(mpb.WithWaitGroup(&wg))
