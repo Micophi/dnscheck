@@ -3,6 +3,8 @@ name: goreleaser
 
 on:
   push:
+    branches:
+      - "packagecloud"
     # run only against tags
     tags:
       - "*"
