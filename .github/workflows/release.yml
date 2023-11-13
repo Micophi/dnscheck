@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: write
-  # packages: write
-  # issues: write
 
 jobs:
   goreleaser:
@@ -23,8 +21,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: stable
-      # More assembly might be required: Docker logins, GPG, etc.
-      # It all depends on your needs.
       - uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
@@ -41,3 +37,11 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
             LICENSE
+      - name: push package to packagecloud.io
+        uses: computology/packagecloud-github-action
+        with:
+          PACKAGE-NAME: dist/*.deb
+          PACKAGECLOUD-USERNAME: micophi
+          PACKAGECLOUD-REPONAME: dnscheck
+          PACKAGECLOUD-DISTRO: debian
+          PACKAGECLOUD-TOKEN: ${{ secrets.packagecloud_token }}
