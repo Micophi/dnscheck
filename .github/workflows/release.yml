@@ -45,5 +45,5 @@ jobs:
           PACKAGE-NAME: dist/*.deb
           PACKAGECLOUD-USERNAME: micophi
           PACKAGECLOUD-REPONAME: dnscheck
-          PACKAGECLOUD-DISTRO: debian
+          PACKAGECLOUD-DISTRO: any/any
           PACKAGECLOUD-TOKEN: ${{ secrets.packagecloud_token }}
