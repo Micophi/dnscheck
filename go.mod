@@ -5,12 +5,12 @@ go 1.21.3
 require (
 	github.com/AdguardTeam/dnsproxy v0.58.0
 	github.com/alexflint/go-arg v1.4.4-0.20231010223646-bf629a16cbe5
+	github.com/goccy/go-yaml v1.11.2
 	github.com/miekg/dns v1.1.56
 	github.com/spf13/viper v1.17.0
 	github.com/vbauerster/mpb/v8 v8.6.2
 	go.uber.org/atomic v1.11.0
 	golang.org/x/time v0.3.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -22,11 +22,14 @@ require (
 	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/ameshkov/dnscrypt/v2 v2.2.7 // indirect
 	github.com/ameshkov/dnsstamps v1.0.3 // indirect
+	github.com/fatih/color v1.14.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/pprof v0.0.0-20230912144702-c363fe2c2ed8 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.1 // indirect
@@ -51,5 +54,7 @@ require (
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

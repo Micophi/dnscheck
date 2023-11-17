@@ -2,13 +2,15 @@ package structs
 
 import (
 	"dnscheck/internal/utilities"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/AdguardTeam/dnsproxy/upstream"
+	"github.com/goccy/go-yaml"
+
 	"go.uber.org/atomic"
-	"gopkg.in/yaml.v3"
 )
 
 type DnsServer struct {
@@ -24,13 +26,39 @@ type DnsServer struct {
 	Client      upstream.Upstream `yaml:"-" json:"-"`
 }
 
+func (d *DnsServer) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name        string
+		Description string
+		Ip          string
+		RateLimit   int
+		Count       int
+		Blocked     int
+		Retries     int
+		Skip        int
+		AvgRtt      string
+	}{
+		Name:        d.Name,
+		Description: d.Description,
+		Ip:          d.Ip,
+		RateLimit:   d.RateLimit,
+		Count:       int(d.Count.Load()),
+		Blocked:     int(d.Blocked.Load()),
+		Retries:     int(d.Retries.Load()),
+		Skip:        int(d.Skip.Load()),
+		AvgRtt:      fmt.Sprint(d.AvgRtt.Load()),
+	})
+}
+
 type DnsServers struct {
 	DnsServers []DnsServer `yaml:"dnsservers"`
 	RateLimit  int         `yaml:"rateLimit"`
 }
 
 func (dnsServers DnsServers) Save(outputpath string) {
-	results, err := yaml.Marshal(&dnsServers)
+	results, err := json.Marshal(&dnsServers)
+	utilities.CheckError(err)
+	results, err = yaml.JSONToYAML(results)
 	utilities.CheckError(err)
 
 	err = os.WriteFile(outputpath, results, 0644)
