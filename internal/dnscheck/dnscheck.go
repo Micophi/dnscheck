@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/miekg/dns"
 	"github.com/vbauerster/mpb/v8"
 	"golang.org/x/time/rate"
@@ -19,17 +20,17 @@ var blockedIpAnswers = append(ciraRedirectIps, sinkholeIp, adguardRedirectIp)
 
 var maximumRetries = int32(20)
 
-func IsDomainBlocked(domain string, dnsServer string) (bool, time.Duration, int32, bool) {
+func IsDomainBlocked(domain string, client upstream.Upstream) (bool, time.Duration, int32, bool) {
 	msg := new(dns.Msg)
 	msg.SetQuestion(fmt.Sprintf("%s.", domain), dns.TypeA)
-
-	client := dns.Client{}
 
 	retries := int32(0)
 	var err error
 	for err == nil {
-		in, rtt, err := client.Exchange(msg, fmt.Sprintf("%s:53", dnsServer))
 
+		start := time.Now()
+		in, err := client.Exchange(msg)
+		var rtt = time.Since(start)
 		if err != nil {
 			retries++
 		} else if in.Answer == nil || len(in.Answer) == 0 {
@@ -60,14 +61,12 @@ func IsDomainBlocked(domain string, dnsServer string) (bool, time.Duration, int3
 func DomainNameCheck(domain string, dnsServer *structs.DnsServer, wg *sync.WaitGroup, progressBar *mpb.Bar, rateLimiter *rate.Limiter) {
 	rateLimiter.Wait(context.Background())
 
-	sinkholed, rtt, retries, timeout := IsDomainBlocked(domain, dnsServer.Ip)
+	sinkholed, rtt, retries, timeout := IsDomainBlocked(domain, dnsServer.Client)
 	dnsServer.Retries.Add(retries)
 
 	if timeout {
 		dnsServer.Skip.Inc()
 	} else {
-		// time.Sleep(100 * time.Millisecond)
-		// atomic.AddInt64(&dnsServer.AvgRtt.Nanoseconds(), rtt.Nanoseconds())
 		dnsServer.AvgRtt.Add(rtt)
 		dnsServer.Count.Inc()
 		if sinkholed {
