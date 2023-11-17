@@ -26,7 +26,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/dnscheck/main.go",
-            "args":[ "--output", "../../output/output.yaml", "--dns", "192.168.30.2" ,"../../scripts/minilist.txt"]
+            "args":[ "--output", "../../output/output.yaml", "--dns", "https://dns10.quad9.net/dns-query" ,"../../scripts/minilist.txt"]
         }
     ]
 }

@@ -6,20 +6,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/AdguardTeam/dnsproxy/upstream"
 	"go.uber.org/atomic"
 	"gopkg.in/yaml.v3"
 )
 
 type DnsServer struct {
-	Name        string          `yaml:"name"`
-	Description string          `yaml:"description"`
-	Ip          string          `yaml:"ip"`
-	RateLimit   int             `yaml:"rateLimit"`
-	Count       atomic.Int32    `default:"0"`
-	Blocked     atomic.Int32    `default:"0"`
-	Retries     atomic.Int32    `default:"0"`
-	Skip        atomic.Int32    `default:"0"`
-	AvgRtt      atomic.Duration `default:"0"`
+	Name        string            `yaml:"name"`
+	Description string            `yaml:"description"`
+	Ip          string            `yaml:"ip"`
+	RateLimit   int               `yaml:"rateLimit"`
+	Count       atomic.Int32      `default:"0"`
+	Blocked     atomic.Int32      `default:"0"`
+	Retries     atomic.Int32      `default:"0"`
+	Skip        atomic.Int32      `default:"0"`
+	AvgRtt      atomic.Duration   `default:"0"`
+	Client      upstream.Upstream `yaml:"-" json:"-"`
 }
 
 type DnsServers struct {

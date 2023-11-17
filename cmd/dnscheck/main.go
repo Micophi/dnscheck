@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/alexflint/go-arg"
 	"github.com/spf13/viper"
 	"github.com/vbauerster/mpb/v8"
@@ -95,6 +96,12 @@ func main() {
 
 	var progressBars = createProgressBars(dnsServers.DnsServers[:], len(domains), progressWaitGroup)
 	var rateLimiters = dnscheck.CreateRateLimiters(dnsServers.DnsServers[:], dnsServers.RateLimit)
+
+	for index := range dnsServers.DnsServers {
+		var err error
+		dnsServers.DnsServers[index].Client, err = upstream.AddressToUpstream(dnsServers.DnsServers[index].Ip, &upstream.Options{})
+		utilities.CheckError(err)
+	}
 
 	for _, domain := range domains {
 		for index := range dnsServers.DnsServers {
